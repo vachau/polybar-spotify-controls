@@ -24,22 +24,23 @@ click-right = python /path/to/spotify_status.py --action Next
 click-middle = python /path/to/spotify_status.py --action Previous
 ```
 
-#### Custom arguments
+#### Optional arguments
 
 ##### Playback controls
 
-Running with `--action ACTION` will send the specified playback action to the Spotify application. This does not print any output and is meant to be used with the `click-[button]=` Polybar options.
+`--action action` will send the specified playback action to the Spotify application. This does not print any output and is meant to be used with the `click-[button]=` Polybar options.
 
-Availible `ACTION` values:
+Availible `action` values:
+
 - `PlayPause`: Toggle play and pause
 - `Next`: Skip song
 - `Previous`: Restart the current song / Go to the previous song
 
 ##### Truncate
 
-The argument "-t" is optional and sets the `trunlen`. It specifies the maximum length of the printed string, so that it gets truncated when the specified length is exceeded. Defaults to 35.
+`-t length` or `--trunclen length` truncates the printed output to the specified `length`. Defaults to 35
 
-Override example:
+Example:
 
 ``` ini
 exec = python /path/to/spotify/script -t 42
@@ -47,49 +48,54 @@ exec = python /path/to/spotify/script -t 42
 
 ##### Format
 
-The argument "-f" is optional and sets the format. You can specify how to display the song and the artist's name, as well as where (or whether) to print the play-pause indicator. 
+`-f format` or `--format format` specifies the output format. Defaults to `{play_pause}{artist}: {song}`
 
-Override example:
+Fields:
+
+- `{play_pause}`: Playback status indicator
+- `{song}`: Song title
+- `{artist}`: Artist name
+- `{album}`: Album name
+
+Example:
 
 ``` ini
 exec = python /path/to/spotify/script -f '{play_pause} {song} - {artist} - {album}'
 ```
 
-This would output "Lone Digger - Caravan Palace - <I°_°I>" in your polybar, instead of what is shown in the screenshot.
+This would output "▶ Lone Digger - Caravan Palace - <I°_°I>" in your polybar, instead of what is shown in the screenshot.
 
 ##### Status indicator
 
-The argument "-p" is optional, and sets which unicode symbols to use for the status indicator. These should be given as a comma-separated string, with the play indicator as the first value and the pause indicator as the second.
+`-p '<playing>,<paused>'` or `--playpause '<playing>,<paused>'` specifies the comma-separated play and pause symbol characters.
 
-Override example:
+Example:
 
 ``` ini
-exec = python /path/to/spotify/script -p '[playing],[paused]'
+exec = python /path/to/spotify/script -p '▶,⏸'
 ```
 
 ##### Fonts
 
-The argument "--font" is optional, and allow to specify which font from your Polybar config to use to display the main label.
+`--font font_id` specifies the font ID from your Polybar config for displaying the `{song}`, `{artist}`, and `{album}` fields.
 
-Override example:
+Example:
 ```ini
 exec = python /path/to/spotify/script --font=1
 ```
 
-The argument "--playpause-font" is optional, and allow to specify which font from your Polybar config to use to display the "play/pause" indicator.
+`--playpause-font font_id` specifies the font ID from your Polybar config for displaying the `{play_pause}` field. Useful for fonts that don't support the playback Unicode symbols.
 
-Override example:
+Example:
 ``` ini
-exec = python /path/to/spotify/script -p '[playing],[paused]' --playpause-font=2
+exec = python /path/to/spotify/script -p '▶,⏸' --playpause-font=2
 ```
 
 ##### Quiet
 
-The argument "-q" or "--quiet" is optional and specifies whether to display the output when the current song is paused.
-This will make polybar only show a song title and artist (or whatever your custom format is) when the song is actually playing and not when it's paused.
-Simply setting the flag on the comand line will enable this option.
+`-q` or `--quiet` disables printing any output when playback is paused.
 
-Override example:
+Example:
 ```ini
 exec = python /path/to/spotify/script -q
 ```
