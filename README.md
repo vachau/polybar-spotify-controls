@@ -1,6 +1,8 @@
-# polybar-spotify
+# polybar-spotify-controls
 
 This is a module that shows the current song playing and its primary artist on Spotify, with a Spotify-green underline, for people that don't want to set up mpd. If Spotify is not active, nothing is shown. If the song name is longer than `trunclen` characers (default 25), it is truncated and `...` is appended. If the song is truncated and contains a single opening parenthesis, the closing paranethsis is appended as well.
+
+This fork adds playback controls, which can be bound to mouse click actions. 
 
 ### Dependencies
 - Python (2.x or 3.x)
@@ -15,11 +17,23 @@ type = custom/script
 interval = 1
 format-prefix = " "
 format = <label>
-exec = python /path/to/spotify/script -f '{artist}: {song}'
+exec = python /path/to/spotify_status.py -f '{artist}: {song}'
 format-underline = #1db954
+click-left = python /path/to/spotify_status.py --action PlayPause
+click-right = python /path/to/spotify_status.py --action Next
+click-middle = python /path/to/spotify_status.py --action Previous
 ```
 
 #### Custom arguments
+
+##### Playback controls
+
+Running with `--action ACTION` will send the specified playback action to the Spotify application. This does not print any output and is meant to be used with the `click-[button]=` Polybar options.
+
+Availible `ACTION` values:
+- `PlayPause`: Toggle play and pause
+- `Next`: Skip song
+- `Previous`: Restart the current song / Go to the previous song
 
 ##### Truncate
 

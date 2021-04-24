@@ -4,6 +4,8 @@ import sys
 import dbus
 import argparse
 
+MP2_INTERFACE = 'org.mpris.MediaPlayer2.Player'
+
 def fix_string(string):
     # corrects encoding for the python version used
     if sys.version_info.major == 3:
@@ -69,6 +71,12 @@ def parse_commandline():
         help="if set, don't show any output when the current song is paused",
         dest='quiet',
     )
+    parser.add_argument(
+        '--action',
+        help="playback action (don't use this in 'exec')",
+        choices=["PlayPause", "Next", "Previous"],
+        dest='player_action',
+    )
     return parser.parse_args()
 
 
@@ -77,6 +85,7 @@ args = parse_commandline()
 output = args.format
 trunclen = args.trunclen
 play_pause = args.play_pause
+player_action = args.player_action
 
 label_with_font = '%{{T{font}}}{label}%{{T-}}'
 font = args.font
@@ -91,47 +100,57 @@ try:
         '/org/mpris/MediaPlayer2'
     )
 
-    spotify_properties = dbus.Interface(
-        spotify_bus,
-        'org.freedesktop.DBus.Properties'
-    )
-
-    metadata = spotify_properties.Get('org.mpris.MediaPlayer2.Player', 'Metadata')
-    status = spotify_properties.Get('org.mpris.MediaPlayer2.Player', 'PlaybackStatus')
-
-    # Handle play/pause label
-
-    play_pause = play_pause.split(',')
-
-    if status == 'Playing':
-        play_pause = play_pause[0]
-    elif status == 'Paused':
-        play_pause = play_pause[1]
+    if player_action is not None:
+        spotify_player = dbus.Interface(spotify_bus, dbus_interface=MP2_INTERFACE)
+        if player_action == 'Next':
+            spotify_player.Next()
+        elif player_action == 'PlayPause':
+            spotify_player.PlayPause()
+        elif player_action == 'Previous':
+            spotify_player.Previous()
     else:
-        play_pause = str()
 
-    if play_pause_font:
-        play_pause = label_with_font.format(font=play_pause_font, label=play_pause)
+        spotify_properties = dbus.Interface(
+            spotify_bus,
+            'org.freedesktop.DBus.Properties'
+        )
 
-    # Handle main label
+        metadata = spotify_properties.Get(MP2_INTERFACE, 'Metadata')
+        status = spotify_properties.Get(MP2_INTERFACE, 'PlaybackStatus')
 
-    artist = fix_string(metadata['xesam:artist'][0]) if metadata['xesam:artist'] else ''
-    song = fix_string(metadata['xesam:title']) if metadata['xesam:title'] else ''
-    album = fix_string(metadata['xesam:album']) if metadata['xesam:album'] else ''
+        # Handle play/pause label
 
-    if (quiet and status == 'Paused') or (not artist and not song and not album):
-        print('')
-    else:
-        if font:
-            artist = label_with_font.format(font=font, label=artist)
-            song = label_with_font.format(font=font, label=song)
-            album = label_with_font.format(font=font, label=album)
+        play_pause = play_pause.split(',')
 
-        # Add 4 to trunclen to account for status symbol, spaces, and other padding characters
-        print(truncate(output.format(artist=artist,
-                                     song=song,
-                                     play_pause=play_pause,
-                                     album=album), trunclen + 4))
+        if status == 'Playing':
+            play_pause = play_pause[0]
+        elif status == 'Paused':
+            play_pause = play_pause[1]
+        else:
+            play_pause = str()
+
+        if play_pause_font:
+            play_pause = label_with_font.format(font=play_pause_font, label=play_pause)
+
+        # Handle main label
+
+        artist = fix_string(metadata['xesam:artist'][0]) if metadata['xesam:artist'] else ''
+        song = fix_string(metadata['xesam:title']) if metadata['xesam:title'] else ''
+        album = fix_string(metadata['xesam:album']) if metadata['xesam:album'] else ''
+
+        if (quiet and status == 'Paused') or (not artist and not song and not album):
+            print('')
+        else:
+            if font:
+                artist = label_with_font.format(font=font, label=artist)
+                song = label_with_font.format(font=font, label=song)
+                album = label_with_font.format(font=font, label=album)
+
+            # Add 4 to trunclen to account for status symbol, spaces, and other padding characters
+            print(truncate(output.format(artist=artist,
+                                        song=song,
+                                        play_pause=play_pause,
+                                        album=album), trunclen + 4))
 
 except Exception as e:
     if isinstance(e, dbus.exceptions.DBusException):
